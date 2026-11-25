@@ -1,0 +1,41 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>База знаний · AxelVT</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,sans-serif;color:#18344c;background:#eef5fa}header{background:#103953;color:white;padding:20px max(5vw,18px);display:flex;align-items:center;justify-content:space-between}main{max-width:1020px;margin:44px auto;padding:0 18px}header strong{font-size:24px}h1{font-size:clamp(32px,5vw,54px);margin:0}section,details,dialog{background:white;border:1px solid #cbd9e3;border-radius:12px;padding:20px;margin-top:16px}button,select,a{font:inherit}button,select{border-radius:7px;border:1px solid #a7b9c5;padding:8px 12px;background:white;color:#174360;cursor:pointer}button[aria-pressed=true],.action{background:#164fa3;color:white}nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}article{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:16px 0;border-top:1px solid #dbe5ec}small{color:#476477}dialog{max-width:min(420px,92vw);margin:auto}dialog::backdrop{background:#10293699}summary{cursor:pointer;font-weight:650}select{margin:0 0 12px 6px}a{color:#154e97}
+</style>
+<header><strong>AxelVT</strong><span>Демо портала</span></header><main><h1>База знаний</h1><p>Стандарты, методики и описания приборов</p><section><nav aria-label="Виды документов"><button aria-pressed="false">Все</button><button aria-pressed="false">ГОСТ</button><button aria-pressed="true">Описание приборов</button></nav>
+<label id="makerLabel">Производитель <select id="maker"><option>Все производители</option><option>Metrix Instruments</option><option>Hansford Sensors</option></select></label>
+<div id="catalog"></div><small id="status">Вы просматриваете каталог как гость.</small> <button id="logout" hidden>Выйти</button></section>
+<details open><summary>Как заполнить базу знаний</summary><p><b>Портал → База знаний → Виды.</b> Создавайте здесь верхние вкладки каталога, например «ГОСТ» и «Описание приборов». Чтобы документ появился в нужной вкладке, отметьте этот вид в его карточке.</p><p><b>База знаний → Разделы.</b> Это темы документов. У подраздела укажите родительский раздел. На текущем сайте выбранные темы выводятся вместе в колонке «Раздел». Для производителя в демо предусмотрен отдельный фильтр.</p><p><b>Форум → Разделы.</b> Это площадки для обсуждений. Каталог документов ведётся отдельно.</p><a href="https://wordpress.org/documentation/article/posts-categories-screen/#add-new-category">Справка WordPress о родительских и дочерних рубриках</a></details></main>
+<dialog id="gate"><h2>Скачивание для участников</h2><p>В рабочем портале потребуется войти или зарегистрироваться. Здесь можно проверить этот шаг без личных данных и скачать образец.</p><button id="enter" class="action">Попробовать как участник</button> <button id="cancel">Отмена</button></dialog>
+<script>
+const docs=[
+ {title:'5550 Механический вибровыключатель',type:'Описание приборов',brand:'Metrix Instruments'},
+ {title:'Metrix 5533 преобразователь вихретокового канала',type:'Описание приборов',brand:'Metrix Instruments'},
+ {title:'HS-100 Акселерометр',type:'Описание приборов',brand:'Hansford Sensors'},
+ {title:'ГОСТ ISO 20816-1-2021 · Вибрация машин',type:'ГОСТ',brand:''}
+];
+let kind='Описание приборов', member=false, pending;
+function sample(doc){
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob(['Демонстрационная карточка AxelVT\n',doc.title,'\n',doc.type,'\n',doc.brand],{type:'text/plain;charset=utf-8'}));
+ a.download='AxelVT — '+doc.title+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function render(){
+ catalog.replaceChildren();makerLabel.hidden=kind!=='Описание приборов';
+ for(const doc of docs){
+  if(kind!=='Все' && doc.type!==kind) continue;
+  if(!makerLabel.hidden && maker.selectedIndex && maker.value!==doc.brand) continue;
+  const row=document.createElement('article'),info=document.createElement('div'),title=document.createElement('b'),meta=document.createElement('small'),btn=document.createElement('button');
+  title.textContent=doc.title;meta.textContent=[doc.type,doc.brand].filter(Boolean).join(' · ');info.append(title,document.createElement('br'),meta);
+  btn.textContent=member?'Скачать образец':'Войти для скачивания';
+  btn.onclick=()=>{if(member)sample(doc);else{pending=doc;gate.showModal()}};
+  row.append(info,btn);catalog.append(row);
+ }
+ document.getElementById('status').textContent=member?'Демо открыто в режиме участника.':'Вы просматриваете каталог как гость.';logout.hidden=!member;
+}
+document.querySelectorAll('nav button').forEach(button=>button.onclick=()=>{
+ kind=button.textContent;maker.selectedIndex=0;
+ document.querySelectorAll('nav button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));render();
+});
+maker.onchange=render;cancel.onclick=()=>gate.close();enter.onclick=()=>{member=true;gate.close();render();sample(pending)};logout.onclick=()=>{member=false;render()};render();
+</script></html>
